@@ -1,0 +1,9 @@
+#Directories
+bin/
+
+#Visual Studio Files
+.vs/
+**.sln
+**.vcxproj
+**.vcxproj.filters
+**.vcxproj.user
