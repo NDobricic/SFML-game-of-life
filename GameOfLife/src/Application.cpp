@@ -1,6 +1,24 @@
 #include <SFML/Graphics.hpp>
 #include <random>
-#include <iostream>
+
+/*----------------------------------------------------------------------/
+SIMULATION CONTROLS:
+- The simulation begins as soon as you start the application
+- To pause/unpause the simulation use SPACE on your keyboard
+- You can control the zoom using the scroll-wheel on your mouse
+- You can drag the screen by holding the left mouse button
+- Use ESCAPE on your keyboard to close the application
+/----------------------------------------------------------------------*/
+
+/*-------SIMULATION OPTIONS-------*/
+const unsigned int WINDOW_WIDTH = 1920;
+const unsigned int WINDOW_HEIGHT = 1080;
+
+const unsigned int FPS_LIMIT = 0;
+const bool ENABLE_VSYNC = true;
+
+const bool FULLSCREEN = true;
+/*--------------------------------*/
 
 class GameOfLife
 {
@@ -42,8 +60,7 @@ public:
         canvas[3] = sf::Vertex(sf::Vector2f(width, 0), sf::Color::White, sf::Vector2f(width, 0));
 
         shader.loadFromFile("res/shaders/gameoflife.frag", sf::Shader::Fragment);
-        shader.setUniform("resX", (float)width);
-        shader.setUniform("resY", (float)height);
+        shader.setUniform("resolution", sf::Vector2f(width, height));
 
         states.shader = &shader;
     }
@@ -94,27 +111,22 @@ int clamp(int number, int min, int max)
     return number;
 }
 
-const unsigned int WIDTH = 1920;
-const unsigned int HEIGHT = 1080;
-
-const unsigned int FPS_LIMIT = 0;
-
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "John Conway's Game of Life", sf::Style::Fullscreen);
-    window.setVerticalSyncEnabled(false);
+    sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "John Conway's Game of Life", (FULLSCREEN == true) ? sf::Style::Fullscreen : sf::Style::Close);
+    window.setVerticalSyncEnabled(ENABLE_VSYNC);
     window.setFramerateLimit(FPS_LIMIT);
 
-    GameOfLife game(WIDTH, HEIGHT);
+    GameOfLife game(WINDOW_WIDTH, WINDOW_HEIGHT);
 
     sf::Sprite* canvas = new sf::Sprite();
 
     sf::RenderStates states;
 
     sf::Image* initialState = new sf::Image();
-    initialState->create(WIDTH, HEIGHT);
-    for(unsigned int y = 0; y < HEIGHT; y++)
-        for (unsigned int x = 0; x < WIDTH; x++)
+    initialState->create(WINDOW_WIDTH, WINDOW_HEIGHT);
+    for(unsigned int y = 0; y < WINDOW_HEIGHT; y++)
+        for (unsigned int x = 0; x < WINDOW_WIDTH; x++)
         {
             unsigned char color = (rand() % 2) * 255;
             initialState->setPixel(x, y, sf::Color(color, color, color, 255));
@@ -191,8 +203,8 @@ int main()
         {
             sf::Vector2f offset = dragStart - (sf::Vector2f)sf::Mouse::getPosition();
 
-            offset.x /= WIDTH;
-            offset.y /= HEIGHT;
+            offset.x /= WINDOW_WIDTH;
+            offset.y /= WINDOW_HEIGHT;
 
             offset.y *= -1;
 
