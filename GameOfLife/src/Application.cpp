@@ -83,14 +83,25 @@ public:
     }
 };
 
-const unsigned int WIDTH = 800;
-const unsigned int HEIGHT = 600;
+int clamp(int number, int min, int max)
+{
+    if (number < min)
+        return min;
 
-const unsigned int FPS_LIMIT = 10;
+    if (number > max)
+        return max;
+
+    return number;
+}
+
+const unsigned int WIDTH = 1920;
+const unsigned int HEIGHT = 1080;
+
+const unsigned int FPS_LIMIT = 0;
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "John Conway's Game of Life");
+    sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "John Conway's Game of Life", sf::Style::Fullscreen);
     window.setVerticalSyncEnabled(false);
     window.setFramerateLimit(FPS_LIMIT);
 
@@ -113,20 +124,92 @@ int main()
 
     delete initialState;
 
+    int cameraZoom = 0;
+    sf::Vector2f cameraOffset(0, 0);
+
+    sf::Shader camShader;
+    camShader.loadFromFile("res/shaders/camera.frag", sf::Shader::Fragment);
+
+    sf::Vector2f dragStart(0, 0);
+    bool dragging = false;
+
+    bool paused = false;
+
     while (window.isOpen())
     {
         sf::Event event;
         while (window.pollEvent(event))
         {
+            switch (event.type)
+            {
+            case sf::Event::Closed:
+                window.close();
+
+            case sf::Event::MouseWheelScrolled:
+                if (event.mouseWheelScroll.delta > 0)
+                    cameraZoom += 1;
+                else
+                    cameraZoom -= 1;
+
+                cameraZoom = clamp(cameraZoom, 0, 5);
+
+                break;
+
+            case sf::Event::MouseButtonPressed:
+                if (event.mouseButton.button == sf::Mouse::Left)
+                {
+                    dragStart = (sf::Vector2f)sf::Mouse::getPosition();
+                    dragging = true;
+                }
+
+                break;
+
+            case sf::Event::MouseButtonReleased:
+                if (event.mouseButton.button == sf::Mouse::Left)
+                {
+                    dragging = false;
+                }
+
+                break;
+
+            case sf::Event::KeyPressed:
+                if (event.key.code == sf::Keyboard::Escape)
+                    window.close();
+                else if (event.key.code == sf::Keyboard::Space)
+                    paused = !paused;
+
+                break;
+
+            default:
+                break;
+            }
             if (event.type == sf::Event::Closed)
                 window.close();
         }
 
+        if (dragging)
+        {
+            sf::Vector2f offset = dragStart - (sf::Vector2f)sf::Mouse::getPosition();
+
+            offset.x /= WIDTH;
+            offset.y /= HEIGHT;
+
+            offset.y *= -1;
+
+            cameraOffset += offset / (float)(1 << cameraZoom);
+
+            dragStart = (sf::Vector2f)sf::Mouse::getPosition();
+        }
+
+        camShader.setUniform("offset", cameraOffset);
+        camShader.setUniform("zoom", cameraZoom);
+
         window.clear();
 
-        game.Update();
+        if (!paused)
+            game.Update();
 
-        window.draw(sf::Sprite(game.GetTexture()));
+        window.draw(sf::Sprite(game.GetTexture()), &camShader);
         window.display();
     }
 
