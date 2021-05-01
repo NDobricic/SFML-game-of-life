@@ -1,22 +1,21 @@
 uniform sampler2D texture;
-uniform float resX;
-uniform float resY;
+uniform vec2 resolution;
 
-int value(float x, float y)
+int getR(float x, float y)
 {
-    return int(texture2D(texture, gl_TexCoord[0].xy + vec2(x / resX, y / resY)).r);
+    return int(texture2D(texture, gl_TexCoord[0].xy + vec2(x, y) / resolution).r);
 }
 
 void main()
 {
-    int sum = value(-1, 1) +
-              value( 0, 1) +
-              value( 1, 1) +
-              value( 1, 0) +
-              value( 1,-1) +
-              value( 0,-1) +
-              value(-1,-1) +
-              value(-1, 0);
+    int sum = getR(-1, 1) +
+              getR( 0, 1) +
+              getR( 1, 1) +
+              getR( 1, 0) +
+              getR( 1,-1) +
+              getR( 0,-1) +
+              getR(-1,-1) +
+              getR(-1, 0);
 
     if (sum==3)
     {
@@ -24,7 +23,7 @@ void main()
     }
     else if (sum== 2)
     {
-        float current = float(value(0, 0));
+        float current = float(getR(0, 0));
         gl_FragColor = vec4(current, current, current, 1.0);
     }
     else
