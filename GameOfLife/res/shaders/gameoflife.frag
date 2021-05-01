@@ -7,7 +7,7 @@ int value(float x, float y)
     return int(texture2D(texture, gl_TexCoord[0].xy + vec2(x / resX, y / resY)).r);
 }
 
-void main(void)
+void main()
 {
     int sum = value(-1, 1) +
               value( 0, 1) +
